@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Phantom Plan — Know Your Financial Self</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b10;
+    --surface: #0d1117;
+    --surface2: #131920;
+    --border: rgba(255,255,255,0.07);
+    --accent: #00e5a0;
+    --accent2: #ff6b35;
+    --accent3: #7c6aff;
+    --text: #e8edf5;
+    --muted: #5a6478;
+    --danger: #ff4560;
+    --warn: #ffb830;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* NOISE TEXTURE */
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none;
+    z-index:0;
+    opacity:0.4;
+  }
+
+  #root { position:relative; z-index:1; }
+
+  /* ---- GRID LINES ---- */
+  .grid-bg {
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ---- SHARED ---- */
+  .app { max-width:900px; margin:0 auto; padding:24px 20px; min-height:100vh; }
+
+  .tag {
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'DM Mono', monospace; font-size:10px; letter-spacing:0.12em;
+    text-transform:uppercase; padding:4px 10px; border-radius:4px;
+    border:1px solid var(--border);
+    color:var(--muted);
+  }
+  .tag.green { border-color:rgba(0,229,160,0.3); color:var(--accent); background:rgba(0,229,160,0.06); }
+  .tag.orange { border-color:rgba(255,107,53,0.3); color:var(--accent2); background:rgba(255,107,53,0.06); }
+  .tag.purple { border-color:rgba(124,106,255,0.3); color:var(--accent3); background:rgba(124,106,255,0.06); }
+
+  h1,h2,h3,h4 { font-family:'Syne', sans-serif; }
+
+  .mono { font-family:'DM Mono', monospace; }
+
+  .card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:24px;
+  }
+  .card:hover { border-color:rgba(255,255,255,0.12); }
+
+  button {
+    cursor:pointer;
+    font-family:'DM Sans', sans-serif;
+    border:none;
+    transition: all 0.2s;
+  }
+  button:disabled { opacity:0.4; cursor:not-allowed; }
+
+  .btn-primary {
+    background:var(--accent);
+    color:#000;
+    font-weight:600;
+    font-size:15px;
+    padding:14px 32px;
+    border-radius:8px;
+    letter-spacing:0.02em;
+  }
+  .btn-primary:hover:not(:disabled) { background:#00ffb3; transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,229,160,0.3); }
+
+  .btn-ghost {
+    background:transparent;
+    color:var(--muted);
+    font-size:13px;
+    padding:8px 16px;
+    border-radius:6px;
+    border:1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color:rgba(255,255,255,0.2); color:var(--text); }
+
+  input, textarea, select {
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text);
+    font-family:'DM Sans', sans-serif;
+    font-size:14px;
+    padding:12px 14px;
+    width:100%;
+    outline:none;
+    transition:border-color 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { border-color:rgba(0,229,160,0.4); }
+  select option { background:#131920; }
+
+  /* Progress bar */
+  .progress-track {
+    height:2px; background:var(--border); border-radius:2px; overflow:hidden;
+  }
+  .progress-fill {
+    height:100%; background:var(--accent); border-radius:2px;
+    transition:width 0.5s ease;
+  }
+
+  /* ---- SPINNER ---- */
+  .spinner {
+    width:32px; height:32px;
+    border:2px solid var(--border);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* ---- SCREEN: LANDING ---- */
+  .landing { padding:60px 0 40px; }
+  .landing-eyebrow {
+    display:flex; align-items:center; gap:12px; margin-bottom:32px;
+  }
+  .pulse-dot {
+    width:8px; height:8px; border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 0 rgba(0,229,160,0.4);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow:0 0 0 0 rgba(0,229,160,0.4); }
+    50% { box-shadow:0 0 0 8px rgba(0,229,160,0); }
+  }
+  .landing h1 {
+    font-size:clamp(36px,6vw,64px);
+    font-weight:800;
+    line-height:1.05;
+    letter-spacing:-0.03em;
+    margin-bottom:20px;
+  }
+  .landing h1 span { color:var(--accent); }
+  .landing p.lead {
+    font-size:17px; color:var(--muted); line-height:1.7;
+    max-width:520px; margin-bottom:40px;
+  }
+  .archetype-grid {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:8px;
+    margin-top:48px;
+  }
+  .archetype-pill {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:11px;
+    font-family:'DM Mono', monospace;
+    color:var(--muted);
+    text-align:center;
+    letter-spacing:0.04em;
+  }
+
+  /* ---- SCREEN: ONBOARDING ---- */
+  .onboard-header { margin-bottom:32px; }
+  .onboard-header h2 { font-size:28px; font-weight:700; margin-bottom:8px; }
+  .step-tabs { display:flex; gap:8px; margin-bottom:32px; }
+  .step-tab {
+    flex:1; padding:10px 8px; border-radius:8px;
+    text-align:center; font-size:12px; font-family:'DM Mono', monospace;
+    border:1px solid var(--border); color:var(--muted);
+    letter-spacing:0.06em; text-transform:uppercase;
+  }
+  .step-tab.active { border-color:var(--accent); color:var(--accent); background:rgba(0,229,160,0.06); }
+  .step-tab.done { border-color:var(--border); color:var(--muted); background:rgba(0,229,160,0.04); }
+
+  .form-group { margin-bottom:20px; }
+  .form-group label { display:block; font-size:12px; font-family:'DM Mono', monospace; color:var(--muted); margin-bottom:8px; letter-spacing:0.08em; text-transform:uppercase; }
+
+  .txn-row {
+    display:grid; grid-template-columns:1fr 1fr 80px auto;
+    gap:10px; align-items:start; margin-bottom:10px;
+  }
+  .txn-row .remove-btn {
+    width:36px; height:42px; display:flex; align-items:center; justify-content:center;
+    background:transparent; border:1px solid var(--border); border-radius:8px;
+    color:var(--danger); font-size:16px; cursor:pointer; margin-top:0;
+  }
+  .add-txn-btn {
+    background:transparent; border:1px dashed var(--border);
+    color:var(--muted); font-size:13px; padding:10px;
+    border-radius:8px; width:100%; cursor:pointer;
+    transition:all 0.2s;
+  }
+  .add-txn-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* ---- LOADING SCREEN ---- */
+  .loading-screen {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:70vh; text-align:center; gap:24px;
+  }
+  .loading-screen h2 { font-size:24px; font-weight:700; }
+  .loading-steps { display:flex; flex-direction:column; gap:8px; width:100%; max-width:380px; }
+  .loading-step {
+    display:flex; align-items:center; gap:12px;
+    font-size:13px; font-family:'DM Mono', monospace; color:var(--muted);
+    padding:10px 14px; border-radius:8px; border:1px solid transparent;
+    transition: all 0.4s;
+  }
+  .loading-step.active { border-color:rgba(0,229,160,0.2); color:var(--accent); background:rgba(0,229,160,0.04); }
+  .loading-step.done { color:var(--muted); }
+  .step-check { font-size:14px; }
+
+  /* ---- ARCHETYPE REVEAL ---- */
+  .archetype-reveal { padding:20px 0; }
+  .archetype-hero {
+    background:linear-gradient(135deg, #0d1117 0%, #111820 100%);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:40px;
+    margin-bottom:24px;
+    position:relative;
+    overflow:hidden;
+  }
+  .archetype-hero::before {
+    content:'';
+    position:absolute; top:-80px; right:-80px;
+    width:300px; height:300px; border-radius:50%;
+    background:radial-gradient(circle, rgba(0,229,160,0.08) 0%, transparent 70%);
+  }
+  .archetype-name {
+    font-family:'Syne', sans-serif;
+    font-size:clamp(28px,5vw,48px);
+    font-weight:800;
+    margin:12px 0 8px;
+    color:var(--accent);
+  }
+  .archetype-subtitle { font-size:15px; color:var(--muted); line-height:1.6; max-width:500px; }
+  .confidence-bar-wrap { margin-top:24px; }
+  .confidence-label { font-size:11px; font-family:'DM Mono', monospace; color:var(--muted); letter-spacing:0.08em; margin-bottom:8px; }
+  .confidence-bar { height:4px; background:var(--border); border-radius:4px; }
+  .confidence-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--accent),#00ffb3); transition:width 1.2s ease; }
+
+  .bsv-grid {
+    display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:24px;
+  }
+  .bsv-item {
+    background:var(--surface2);
+    border:1px solid var(--border); border-radius:10px; padding:14px 16px;
+  }
+  .bsv-label { font-size:10px; font-family:'DM Mono', monospace; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:8px; }
+  .bsv-value { font-size:20px; font-weight:700; font-family:'Syne', sans-serif; }
+  .bsv-bar { height:3px; background:var(--border); border-radius:2px; margin-top:8px; }
+  .bsv-bar-fill { height:100%; border-radius:2px; transition:width 1s ease; }
+
+  /* ---- DASHBOARD ---- */
+  .dashboard-header { margin-bottom:32px; }
+  .dashboard-header h2 { font-size:28px; font-weight:800; margin-bottom:6px; }
+
+  .sim-hero {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:32px;
+    margin-bottom:20px;
+    position:relative; overflow:hidden;
+  }
+  .sim-number {
+    font-family:'Syne', sans-serif;
+    font-size:64px; font-weight:800;
+    color:var(--danger); line-height:1;
+  }
+  .sim-caption { font-size:14px; color:var(--muted); margin-top:6px; }
+
+  .failure-modes { display:flex; flex-direction:column; gap:12px; margin-top:24px; }
+  .failure-card {
+    background:var(--surface2);
+    border:1px solid var(--border); border-radius:10px; padding:16px 20px;
+    display:flex; gap:16px; align-items:flex-start;
+  }
+  .failure-icon { font-size:20px; flex-shrink:0; margin-top:2px; }
+  .failure-title { font-size:14px; font-weight:600; margin-bottom:4px; }
+  .failure-desc { font-size:13px; color:var(--muted); line-height:1.5; }
+  .failure-prob {
+    margin-left:auto; flex-shrink:0;
+    font-family:'DM Mono', monospace; font-size:13px;
+    padding:4px 10px; border-radius:6px;
+  }
+  .prob-high { background:rgba(255,69,96,0.12); color:var(--danger); border:1px solid rgba(255,69,96,0.2); }
+  .prob-med { background:rgba(255,184,48,0.12); color:var(--warn); border:1px solid rgba(255,184,48,0.2); }
+
+  .guardrails-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:20px; }
+  .guardrail-card {
+    background:var(--surface);
+    border:1px solid rgba(0,229,160,0.15); border-radius:12px; padding:20px;
+  }
+  .guardrail-icon { font-size:22px; margin-bottom:10px; }
+  .guardrail-title { font-size:14px; font-weight:700; margin-bottom:6px; }
+  .guardrail-desc { font-size:12px; color:var(--muted); line-height:1.6; }
+
+  .nav-bar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:16px 0; margin-bottom:8px;
+    border-bottom:1px solid var(--border);
+  }
+  .nav-logo { font-family:'Syne', sans-serif; font-weight:800; font-size:18px; letter-spacing:-0.02em; }
+  .nav-logo span { color:var(--accent); }
+
+  .section-title {
+    font-size:11px; font-family:'DM Mono', monospace; color:var(--muted);
+    letter-spacing:0.12em; text-transform:uppercase; margin-bottom:16px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .ai-narrative {
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    border-radius:0 10px 10px 0;
+    padding:16px 20px;
+    font-size:14px; line-height:1.7;
+    color:#b0bfd0;
+    margin-bottom:20px;
+  }
+
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+  .metric-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:16px;
+  }
+  .metric-label { font-size:11px; font-family:'DM Mono', monospace; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:6px; }
+  .metric-value { font-size:22px; font-weight:700; font-family:'Syne', sans-serif; }
+  .metric-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  @media(max-width:600px) {
+    .archetype-grid { grid-template-columns:repeat(2,1fr); }
+    .bsv-grid { grid-template-columns:1fr; }
+    .guardrails-grid { grid-template-columns:1fr; }
+    .two-col { grid-template-columns:1fr; }
+    .txn-row { grid-template-columns:1fr 1fr; }
+  }
+
+  /* Fade in */
+  .fade-in { animation:fadeIn 0.5s ease both; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ── CONSTANTS ──────────────────────────────────────────────────────
+const ARCHETYPES = [
+  "Optimist Procrastinator","Guilt Investor","Social Spender",
+  "Anchor Holder","Invisible Saver","Crisis Planner",
+  "Delegator","Optimizer"
+];
+const TXN_CATEGORIES = ["Food","Transport","Shopping","Entertainment","Investment","EMI","Medical","Utilities","Gifting","Other"];
+
+// ── BACKEND CONFIG ─────────────────────────────────────────────────
+// Change this to your deployed backend URL
+const BACKEND_URL = "http://localhost:8000";
+
+// ── BACKEND API CALL ────────────────────────────────────────────────
+async function callBackend(transactions, profile, goals) {
+  const payload = {
+    profile: {
+      name: profile.name,
+      age: parseInt(profile.age) || 26,
+      monthly_income: parseFloat(profile.income) || 50000,
+      fire_target_age: parseInt(goals.fireAge) || 45,
+      target_monthly_savings: parseFloat(goals.monthlySavings) || 10000,
+      top_goal: goals.topGoal || "Financial independence",
+      self_reported_behavior: goals.behavior || null
+    },
+    transactions: transactions.map(t => ({
+      description: t.desc,
+      category: t.category,
+      amount: parseFloat(t.amount) || 0,
+      date: null
+    })),
+    stated_savings_rate: 20.0
+  };
+
+  const response = await fetch(`${BACKEND_URL}/analyze`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Backend error ${response.status}: ${err}`);
+  }
+  return response.json();
+}
+
+// ── MAP BACKEND RESPONSE → UI FORMAT ──────────────────────────────
+function mapBackendToUI(resp) {
+  const arch = resp.archetype;
+  const sim  = resp.simulation;
+  const grd  = resp.guardrails;
+  const bsv  = resp.bsv;
+  const plan = resp.plan;
+
+  // Build 4-item BSV display from full 14-D vector
+  const bsvRaw = bsv.raw || {};
+  const bsvKeys = ["impulse_velocity","savings_consistency","social_spend_inflation","stated_vs_actual_gap"];
+  const bsvDisplay = bsvKeys.map(k => {
+    const d = bsvRaw[k] || {};
+    return { label: k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()), display: d.display||'—', value: d.score||50, color: d.color||'#00e5a0' };
+  });
+
+  return {
+    // Archetype
+    archetype: arch.primary,
+    confidence: arch.confidence,
+    archetypeDesc: arch.narrative,
+    tagline: arch.tagline,
+    narrative: `${arch.narrative} ${arch.tagline}`,
+    // BSV
+    bsv: bsvDisplay,
+    bsvFull: bsvRaw,
+    bsvHealth: bsv.overall_health,
+    bsvInsight: bsv.key_insight,
+    // Simulation
+    successRate: sim.summary?.success_rate || 43,
+    firstFailureMonth: sim.summary?.median_first_failure_month || 'Month 7',
+    failurePct: sim.summary?.failure_rate || 57,
+    behavioralDrag: sim.summary?.behavioral_drag || '8-12%',
+    failureModes: (sim.failure_modes||[]).map(f => ({
+      icon: f.icon, title: f.title, desc: f.description, prob: f.probability,
+      timing: f.timing, cascade: f.cascade_effect, impact: f.financial_impact
+    })),
+    criticalMonth: sim.critical_month,
+    simulationNarrative: sim.narrative,
+    bestCase: sim.best_case,
+    worstCase: sim.worst_case,
+    // Guardrails
+    guardrails: (grd.guardrails||[]).filter(g=>g.priority==='HIGH'||g.priority==='MEDIUM').map(g => ({
+      icon: g.icon, title: g.title, desc: g.description,
+      priority: g.priority, lift: g.estimated_success_lift, steps: g.implementation
+    })),
+    firstAction: grd.first_action,
+    combinedLift: grd.combined_lift,
+    // Plan
+    plan: {
+      allocation: plan.monthly_allocation,
+      fire: plan.fire_projection,
+      tax: plan.tax_optimization,
+      emergency: plan.emergency_fund,
+      milestones: plan.milestones,
+      modifications: plan.archetype_modifications
+    }
+  };
+}
+
+// ── NAV ────────────────────────────────────────────────────────────
+function NavBar({ screen }) {
+  return (
+    <div className="nav-bar">
+      <div className="nav-logo">Phantom<span>.</span></div>
+      <div style={{display:'flex',gap:8}}>
+        {screen==='dashboard' && <span className="tag green">● Live</span>}
+        <span className="tag mono" style={{fontSize:10}}>BETA</span>
+      </div>
+    </div>
+  );
+}
+
+// ── SCREEN 1: LANDING ──────────────────────────────────────────────
+function LandingScreen({ onStart }) {
+  return (
+    <div className="landing fade-in">
+      <div className="landing-eyebrow">
+        <div className="pulse-dot"/>
+        <span className="tag green">Behavioral Finance Engine</span>
+      </div>
+      <h1>Your plan fails<br/>because <span>you</span> do.</h1>
+      <p className="lead">
+        Phantom Plan watches what you actually do with money — not what you intend to —
+        and builds a financial plan that survives contact with real life.
+      </p>
+      <button className="btn-primary" onClick={onStart}>
+        Analyze My Behavior →
+      </button>
+
+      <div style={{marginTop:48}}>
+        <div className="section-title">8 Behavioral Archetypes</div>
+        <div className="archetype-grid">
+          {ARCHETYPES.map(a => (
+            <div className="archetype-pill" key={a}>{a}</div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{marginTop:40, display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12}}>
+        {[
+          {n:'500+',l:'Simulated lives'},
+          {n:'8',l:'Behavioral archetypes'},
+          {n:'14D',l:'Behavioral fingerprint'},
+        ].map(m => (
+          <div className="card" key={m.n} style={{textAlign:'center'}}>
+            <div style={{fontFamily:'Syne',fontSize:28,fontWeight:800,color:'var(--accent)'}}>{m.n}</div>
+            <div style={{fontSize:12,color:'var(--muted)',marginTop:4,fontFamily:'DM Mono'}}>{m.l}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── SCREEN 2: ONBOARDING ───────────────────────────────────────────
+function OnboardingScreen({ onSubmit }) {
+  const [step, setStep] = useState(0); // 0=profile 1=transactions 2=goals
+  const [profile, setProfile] = useState({ name:'', income:'', age:'' });
+  const [transactions, setTransactions] = useState([
+    { desc:'Zomato / Swiggy', category:'Food', amount:'3200' },
+    { desc:'Amazon order', category:'Shopping', amount:'5800' },
+    { desc:'SIP - Nifty Index', category:'Investment', amount:'5000' },
+    { desc:'Weekend trip', category:'Entertainment', amount:'8500' },
+    { desc:'Rent', category:'Utilities', amount:'18000' },
+  ]);
+  const [goals, setGoals] = useState({ fireAge:'45', monthlySavings:'15000', topGoal:'Build emergency fund (6 months)', behavior:'' });
+
+  const addTxn = () => setTransactions(t => [...t, {desc:'',category:'Food',amount:''}]);
+  const removeTxn = i => setTransactions(t => t.filter((_,idx)=>idx!==i));
+  const updateTxn = (i,k,v) => setTransactions(t => t.map((r,idx)=>idx===i?{...r,[k]:v}:r));
+
+  const stepLabels = ['Profile','Transactions','Goals'];
+
+  return (
+    <div className="fade-in">
+      <div className="onboard-header">
+        <h2>Build your behavioral fingerprint</h2>
+        <p style={{color:'var(--muted)',fontSize:13,marginTop:4}}>Takes 3 minutes. No account connection needed.</p>
+      </div>
+
+      <div className="step-tabs">
+        {stepLabels.map((l,i) => (
+          <div key={l} className={`step-tab ${i===step?'active':i<step?'done':''}`}
+               onClick={()=>i<step&&setStep(i)} style={{cursor:i<step?'pointer':'default'}}>
+            {i<step?'✓ ':''}{l}
+          </div>
+        ))}
+      </div>
+
+      {step===0 && (
+        <div className="fade-in">
+          <div className="form-group">
+            <label>Your Name</label>
+            <input placeholder="Aryan Sharma" value={profile.name}
+              onChange={e=>setProfile(p=>({...p,name:e.target.value}))}/>
+          </div>
+          <div className="two-col">
+            <div className="form-group">
+              <label>Monthly Take-Home (₹)</label>
+              <input type="number" placeholder="75000" value={profile.income}
+                onChange={e=>setProfile(p=>({...p,income:e.target.value}))}/>
+            </div>
+            <div className="form-group">
+              <label>Age</label>
+              <input type="number" placeholder="26" value={profile.age}
+                onChange={e=>setProfile(p=>({...p,age:e.target.value}))}/>
+            </div>
+          </div>
+          <button className="btn-primary" style={{marginTop:8}} onClick={()=>setStep(1)}
+            disabled={!profile.name||!profile.income}>
+            Continue →
+          </button>
+        </div>
+      )}
+
+      {step===1 && (
+        <div className="fade-in">
+          <div style={{marginBottom:16,fontSize:13,color:'var(--muted)'}}>
+            Enter your last month's major transactions (pre-filled with samples):
+          </div>
+          {transactions.map((t,i) => (
+            <div className="txn-row" key={i}>
+              <input placeholder="Description" value={t.desc}
+                onChange={e=>updateTxn(i,'desc',e.target.value)}/>
+              <select value={t.category} onChange={e=>updateTxn(i,'category',e.target.value)}>
+                {TXN_CATEGORIES.map(c=><option key={c}>{c}</option>)}
+              </select>
+              <input type="number" placeholder="₹" value={t.amount}
+                onChange={e=>updateTxn(i,'amount',e.target.value)}/>
+              <button className="remove-btn" onClick={()=>removeTxn(i)}>×</button>
+            </div>
+          ))}
+          <button className="add-txn-btn" onClick={addTxn}>+ Add Transaction</button>
+          <div style={{marginTop:20,display:'flex',gap:10}}>
+            <button className="btn-ghost" onClick={()=>setStep(0)}>← Back</button>
+            <button className="btn-primary" onClick={()=>setStep(2)}
+              disabled={transactions.length<2}>
+              Continue →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step===2 && (
+        <div className="fade-in">
+          <div className="two-col">
+            <div className="form-group">
+              <label>FIRE Target Age</label>
+              <input type="number" placeholder="45" value={goals.fireAge}
+                onChange={e=>setGoals(g=>({...g,fireAge:e.target.value}))}/>
+            </div>
+            <div className="form-group">
+              <label>Target Monthly Savings (₹)</label>
+              <input type="number" placeholder="15000" value={goals.monthlySavings}
+                onChange={e=>setGoals(g=>({...g,monthlySavings:e.target.value}))}/>
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Top Financial Goal</label>
+            <input placeholder="e.g. Build 6-month emergency fund" value={goals.topGoal}
+              onChange={e=>setGoals(g=>({...g,topGoal:e.target.value}))}/>
+          </div>
+          <div className="form-group">
+            <label>Biggest Financial Struggle (optional)</label>
+            <textarea rows={3} placeholder="e.g. I save well for 3 months then blow it on a trip or wedding..."
+              value={goals.behavior} onChange={e=>setGoals(g=>({...g,behavior:e.target.value}))}
+              style={{resize:'vertical'}}/>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button className="btn-ghost" onClick={()=>setStep(1)}>← Back</button>
+            <button className="btn-primary" onClick={()=>onSubmit({profile,transactions,goals})}>
+              Run Behavioral Analysis →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── SCREEN 3: LOADING ──────────────────────────────────────────────
+function LoadingScreen({ phase }) {
+  const steps = [
+    {label:'Parsing transaction patterns',key:0},
+    {label:'Computing behavioral signature',key:1},
+    {label:'Assigning archetype',key:2},
+    {label:'Running 500 simulations',key:3},
+    {label:'Generating guardrails',key:4},
+  ];
+  return (
+    <div className="loading-screen fade-in">
+      <div className="spinner"/>
+      <h2>Analyzing your financial behavior</h2>
+      <p style={{color:'var(--muted)',fontSize:13}}>Claude is running your behavioral simulation...</p>
+      <div className="loading-steps">
+        {steps.map(s=>(
+          <div key={s.key} className={`loading-step ${s.key===phase?'active':s.key<phase?'done':''}`}>
+            <span className="step-check">{s.key<phase?'✓':'○'}</span>
+            <span>{s.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── BSV BAR ────────────────────────────────────────────────────────
+function BSVBar({ value, color }) {
+  const [w, setW] = useState(0);
+  useEffect(()=>{setTimeout(()=>setW(value),100)},[value]);
+  return (
+    <div className="bsv-bar">
+      <div className="bsv-bar-fill" style={{width:w+'%',background:color||'var(--accent)'}}/>
+    </div>
+  );
+}
+
+// ── SCREEN 4: ARCHETYPE REVEAL ─────────────────────────────────────
+function ArchetypeScreen({ data, onContinue }) {
+  const [confW, setConfW] = useState(0);
+  useEffect(()=>{ setTimeout(()=>setConfW(data.confidence||78),200); },[]);
+
+  return (
+    <div className="archetype-reveal fade-in">
+      <div className="archetype-hero">
+        <span className="tag purple">Behavioral Archetype Identified</span>
+        <div className="archetype-name">{data.archetype}</div>
+        <div className="archetype-subtitle">{data.archetypeDesc}</div>
+        <div className="confidence-bar-wrap">
+          <div className="confidence-label">Confidence Score — {data.confidence}%</div>
+          <div className="confidence-bar">
+            <div className="confidence-fill" style={{width:confW+'%'}}/>
+          </div>
+        </div>
+      </div>
+
+      <div className="section-title">Behavioral Signature Vector (14-D)</div>
+      <div className="bsv-grid">
+        {(data.bsv||[]).map((d,i)=>(
+          <div className="bsv-item" key={i}>
+            <div className="bsv-label">{d.label}</div>
+            <div className="bsv-value" style={{color:d.color||'var(--text)'}}>{d.display}</div>
+            <BSVBar value={d.value} color={d.color}/>
+          </div>
+        ))}
+      </div>
+
+      {data.narrative && (
+        <div style={{marginTop:20}}>
+          <div className="section-title">AI Narrative</div>
+          <div className="ai-narrative">{data.narrative}</div>
+        </div>
+      )}
+
+      <button className="btn-primary" style={{marginTop:8}} onClick={onContinue}>
+        Run Behavioral Simulation →
+      </button>
+    </div>
+  );
+}
+
+// ── SCREEN 5: DASHBOARD ────────────────────────────────────────────
+function PlanAllocation({ allocation }) {
+  if (!allocation) return null;
+  const items = Object.entries(allocation).filter(([,v])=>v>0);
+  const total = items.reduce((s,[,v])=>s+v,0);
+  const colors = ['#00e5a0','#7c6aff','#ff6b35','#ffb830','#00c4ff','#ff4560','#a8ff78','#78a8ff'];
+  return (
+    <div style={{marginBottom:20}}>
+      <div className="section-title">Monthly Allocation Breakdown</div>
+      <div className="card" style={{padding:20}}>
+        <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:16}}>
+          {items.map(([k,v],i)=>(
+            <div key={k} style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'var(--muted)'}}>
+              <div style={{width:8,height:8,borderRadius:'50%',background:colors[i%colors.length],flexShrink:0}}/>
+              <span style={{textTransform:'capitalize'}}>{k.replace(/_/g,' ')}: <strong style={{color:'var(--text)'}}>₹{v.toLocaleString()}</strong></span>
+            </div>
+          ))}
+        </div>
+        <div style={{height:8,borderRadius:4,overflow:'hidden',display:'flex',gap:1}}>
+          {items.map(([k,v],i)=>(
+            <div key={k} style={{flex:v,background:colors[i%colors.length],transition:'all 1s ease'}} title={`${k}: ₹${v}`}/>
+          ))}
+        </div>
+        <div style={{marginTop:8,fontSize:11,fontFamily:'DM Mono',color:'var(--muted)'}}>
+          Total tracked: ₹{total.toLocaleString()} / month
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FireProjection({ fire }) {
+  if (!fire) return null;
+  return (
+    <div className="card" style={{padding:20,marginBottom:12,borderColor:fire.on_track?'rgba(0,229,160,0.2)':'rgba(255,69,96,0.2)'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+        <div>
+          <div className="metric-label">FIRE Projection</div>
+          <div style={{fontSize:28,fontFamily:'Syne',fontWeight:800,color:fire.on_track?'var(--accent)':'var(--warn)',marginTop:4}}>
+            Age {fire.projected_fire_age}
+          </div>
+          <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>
+            Target corpus: ₹{(fire.target_corpus/1e7).toFixed(1)}Cr · {fire.assumed_return_rate}% assumed return
+          </div>
+        </div>
+        <span className={`tag ${fire.on_track?'green':'orange'}`}>
+          {fire.on_track?'On Track':'Off Track'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function Milestones({ milestones }) {
+  if (!milestones || milestones.length===0) return null;
+  return (
+    <div style={{marginBottom:20}}>
+      <div className="section-title">12-Month Milestones</div>
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        {milestones.map((m,i)=>(
+          <div key={i} style={{display:'flex',gap:12,alignItems:'flex-start',padding:'10px 0',borderBottom:'1px solid var(--border)'}}>
+            <div style={{fontFamily:'DM Mono',fontSize:11,color:'var(--accent)',minWidth:60,paddingTop:2}}>M{m.month}</div>
+            <div style={{fontSize:13,color:'var(--text)',lineHeight:1.5}}>{m.milestone}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DashboardScreen({ data, userData }) {
+  const [tab, setTab] = useState('simulation'); // simulation | plan | guardrails
+  const plan = data.plan || {};
+
+  return (
+    <div className="fade-in">
+      <div className="dashboard-header">
+        <h2>Your Behavioral Report</h2>
+        <p style={{color:'var(--muted)',fontSize:13}}>500 simulated futures · 6 AI agents · built for you</p>
+      </div>
+
+      {/* Tab nav */}
+      <div style={{display:'flex',gap:6,marginBottom:24,borderBottom:'1px solid var(--border)',paddingBottom:0}}>
+        {[['simulation','Simulation'],['plan','Financial Plan'],['guardrails','Guardrails']].map(([k,l])=>(
+          <button key={k} onClick={()=>setTab(k)} style={{
+            background:'transparent',border:'none',padding:'10px 16px',cursor:'pointer',
+            fontSize:13,fontFamily:'DM Sans',fontWeight:600,
+            color:tab===k?'var(--accent)':'var(--muted)',
+            borderBottom:tab===k?'2px solid var(--accent)':'2px solid transparent',
+            marginBottom:-1,transition:'all 0.15s'
+          }}>{l}</button>
+        ))}
+      </div>
+
+      {/* ── TAB: SIMULATION ── */}
+      {tab==='simulation' && (
+        <div className="fade-in">
+          {/* Summary metrics */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
+            <div className="metric-card">
+              <div className="metric-label">Plan Success Rate</div>
+              <div className="metric-value" style={{color:data.successRate<50?'var(--danger)':data.successRate<65?'var(--warn)':'var(--accent)'}}>
+                {data.successRate}%
+              </div>
+              <div className="metric-sub">of 500 simulated lives</div>
+            </div>
+            <div className="metric-card">
+              <div className="metric-label">First Failure</div>
+              <div className="metric-value" style={{color:'var(--warn)',fontSize:18}}>{data.firstFailureMonth}</div>
+              <div className="metric-sub">median across sims</div>
+            </div>
+            <div className="metric-card">
+              <div className="metric-label">Behavioral Drag</div>
+              <div className="metric-value" style={{color:'var(--danger)',fontSize:18}}>{data.behavioralDrag||'~10%'}</div>
+              <div className="metric-sub">return lost to behavior</div>
+            </div>
+          </div>
+
+          {/* Failure modes */}
+          <div className="section-title">Top Failure Modes</div>
+          <div className="sim-hero">
+            <div style={{display:'flex',alignItems:'baseline',gap:12,marginBottom:16}}>
+              <div className="sim-number">{data.failurePct}%</div>
+              <div>
+                <div style={{fontSize:15,fontWeight:600}}>of simulated versions of you miss the plan</div>
+                <div className="sim-caption">These are the exact triggers — by probability.</div>
+              </div>
+            </div>
+            <div className="failure-modes">
+              {(data.failureModes||[]).map((f,i)=>(
+                <div className="failure-card" key={i}>
+                  <div className="failure-icon">{f.icon}</div>
+                  <div style={{flex:1}}>
+                    <div className="failure-title">{f.title}
+                      {f.timing && <span style={{fontWeight:400,fontSize:11,color:'var(--muted)',marginLeft:8,fontFamily:'DM Mono'}}>{f.timing}</span>}
+                    </div>
+                    <div className="failure-desc">{f.desc}</div>
+                    {f.cascade && (
+                      <div style={{fontSize:11,color:'var(--danger)',marginTop:4,fontFamily:'DM Mono'}}>
+                        ↳ Cascade: {f.cascade}
+                      </div>
+                    )}
+                    {f.impact && (
+                      <div style={{fontSize:11,color:'var(--warn)',marginTop:2,fontFamily:'DM Mono'}}>
+                        Impact: {f.impact}
+                      </div>
+                    )}
+                  </div>
+                  <div className={`failure-prob ${f.prob>60?'prob-high':'prob-med'}`}>{f.prob}%</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Critical month callout */}
+          {data.criticalMonth && (
+            <div style={{background:'rgba(255,69,96,0.06)',border:'1px solid rgba(255,69,96,0.2)',borderRadius:10,padding:'14px 18px',marginTop:12}}>
+              <div style={{fontSize:11,fontFamily:'DM Mono',color:'var(--danger)',letterSpacing:'0.08em',marginBottom:6}}>⚠ CRITICAL MONTH</div>
+              <div style={{fontSize:14,fontWeight:600}}>{data.criticalMonth.month}</div>
+              <div style={{fontSize:13,color:'var(--muted)',marginTop:4}}>{data.criticalMonth.why_critical}</div>
+              {data.criticalMonth.survival_rate && (
+                <div style={{fontSize:11,fontFamily:'DM Mono',color:'var(--muted)',marginTop:6}}>
+                  Only {data.criticalMonth.survival_rate}% of simulated versions survive this month intact.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Simulation narrative */}
+          {data.simulationNarrative && (
+            <div style={{marginTop:16}}>
+              <div className="section-title">Simulation Insight</div>
+              <div className="ai-narrative">{data.simulationNarrative}</div>
+            </div>
+          )}
+
+          {/* Best/Worst case */}
+          {(data.bestCase || data.worstCase) && (
+            <div className="two-col" style={{marginTop:8}}>
+              {data.bestCase && (
+                <div style={{background:'rgba(0,229,160,0.04)',border:'1px solid rgba(0,229,160,0.15)',borderRadius:10,padding:16}}>
+                  <div style={{fontSize:11,fontFamily:'DM Mono',color:'var(--accent)',marginBottom:8,letterSpacing:'0.08em'}}>✦ BEST CASE (TOP 20%)</div>
+                  <div style={{fontSize:13,color:'var(--muted)',lineHeight:1.6}}>{data.bestCase}</div>
+                </div>
+              )}
+              {data.worstCase && (
+                <div style={{background:'rgba(255,69,96,0.04)',border:'1px solid rgba(255,69,96,0.15)',borderRadius:10,padding:16}}>
+                  <div style={{fontSize:11,fontFamily:'DM Mono',color:'var(--danger)',marginBottom:8,letterSpacing:'0.08em'}}>⚑ WORST CASE (BOTTOM 10%)</div>
+                  <div style={{fontSize:13,color:'var(--muted)',lineHeight:1.6}}>{data.worstCase}</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB: PLAN ── */}
+      {tab==='plan' && (
+        <div className="fade-in">
+          <FireProjection fire={plan.fire}/>
+          <PlanAllocation allocation={plan.allocation}/>
+
+          {/* Tax optimization */}
+          {plan.tax && (
+            <div style={{marginBottom:20}}>
+              <div className="section-title">Tax Optimization</div>
+              <div className="card" style={{padding:20}}>
+                <div className="two-col">
+                  <div>
+                    <div className="metric-label">Recommended Regime</div>
+                    <div className="metric-value" style={{textTransform:'uppercase',fontSize:18}}>{plan.tax.current_regime_recommendation}</div>
+                  </div>
+                  <div>
+                    <div className="metric-label">Est. Annual Tax Saved</div>
+                    <div className="metric-value" style={{color:'var(--accent)',fontSize:18}}>
+                      ₹{(plan.tax.estimated_tax_saved||0).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                {plan.tax.key_action && (
+                  <div style={{marginTop:12,fontSize:13,color:'var(--muted)',padding:'10px 14px',background:'var(--surface2)',borderRadius:8}}>
+                    💡 {plan.tax.key_action}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Emergency fund */}
+          {plan.emergency && (
+            <div style={{marginBottom:20}}>
+              <div className="section-title">Emergency Fund</div>
+              <div className="card" style={{padding:20}}>
+                <div className="two-col">
+                  <div>
+                    <div className="metric-label">Target Amount</div>
+                    <div className="metric-value" style={{fontSize:18}}>₹{(plan.emergency.target||0).toLocaleString()}</div>
+                    <div className="metric-sub">6 months expenses</div>
+                  </div>
+                  <div>
+                    <div className="metric-label">Time to Build</div>
+                    <div className="metric-value" style={{color:'var(--warn)',fontSize:18}}>{plan.emergency.months_to_build} months</div>
+                    <span className={`tag ${plan.emergency.priority==='high'?'orange':'green'}`} style={{marginTop:8,display:'inline-flex'}}>
+                      {plan.emergency.priority} priority
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Archetype plan modifications */}
+          {plan.modifications && plan.modifications.length > 0 && (
+            <div style={{marginBottom:20}}>
+              <div className="section-title">Archetype Adaptations</div>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {plan.modifications.map((m,i)=>(
+                  <div key={i} style={{display:'flex',gap:10,padding:'10px 14px',background:'rgba(124,106,255,0.06)',border:'1px solid rgba(124,106,255,0.12)',borderRadius:8,fontSize:13,color:'var(--muted)',lineHeight:1.5}}>
+                    <span style={{color:'var(--accent3)',flexShrink:0}}>⟳</span>{m}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <Milestones milestones={plan.milestones}/>
+        </div>
+      )}
+
+      {/* ── TAB: GUARDRAILS ── */}
+      {tab==='guardrails' && (
+        <div className="fade-in">
+          {/* First action today banner */}
+          {data.firstAction && (
+            <div style={{background:'linear-gradient(135deg,rgba(0,229,160,0.1),rgba(0,229,160,0.04))',border:'1px solid rgba(0,229,160,0.3)',borderRadius:12,padding:'16px 20px',marginBottom:20}}>
+              <div style={{fontSize:11,fontFamily:'DM Mono',color:'var(--accent)',letterSpacing:'0.08em',marginBottom:8}}>⚡ DO THIS TODAY (NEXT 30 MINUTES)</div>
+              <div style={{fontSize:14,lineHeight:1.6,color:'var(--text)'}}>{data.firstAction}</div>
+            </div>
+          )}
+
+          {data.combinedLift && (
+            <div style={{fontSize:12,color:'var(--muted)',marginBottom:16,fontFamily:'DM Mono'}}>
+              Combined lift if HIGH priority guardrails implemented: <strong style={{color:'var(--accent)'}}>{data.combinedLift}</strong>
+            </div>
+          )}
+
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            {(data.guardrails||[]).map((g,i)=>(
+              <div key={i} style={{
+                background:'var(--surface)',border:`1px solid ${g.priority==='HIGH'?'rgba(0,229,160,0.2)':'var(--border)'}`,
+                borderRadius:12,padding:'20px'
+              }}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+                  <div style={{display:'flex',gap:10,alignItems:'center'}}>
+                    <span style={{fontSize:22}}>{g.icon}</span>
+                    <div>
+                      <div style={{fontSize:14,fontWeight:700}}>{g.title}</div>
+                      {g.lift && <div style={{fontSize:11,fontFamily:'DM Mono',color:'var(--accent)',marginTop:2}}>{g.lift}</div>}
+                    </div>
+                  </div>
+                  <span className={`tag ${g.priority==='HIGH'?'green':g.priority==='MEDIUM'?'orange':''}`}>{g.priority}</span>
+                </div>
+                <div style={{fontSize:13,color:'var(--muted)',lineHeight:1.6,marginBottom:12}}>{g.desc}</div>
+                {g.steps && (
+                  <div style={{background:'var(--surface2)',borderRadius:8,padding:'12px 14px'}}>
+                    <div style={{fontSize:10,fontFamily:'DM Mono',color:'var(--muted)',letterSpacing:'0.08em',marginBottom:8}}>IMPLEMENTATION STEPS</div>
+                    {Object.entries(g.steps).filter(([,v])=>v).map(([k,v],si)=>(
+                      <div key={k} style={{fontSize:12,color:'var(--text)',lineHeight:1.6,display:'flex',gap:8,marginBottom:4}}>
+                        <span style={{color:'var(--accent)',fontFamily:'DM Mono',flexShrink:0}}>{si+1}.</span>{v}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={{marginTop:24,padding:'14px 18px',background:'rgba(124,106,255,0.05)',border:'1px solid rgba(124,106,255,0.12)',borderRadius:10,fontSize:11,color:'var(--muted)',lineHeight:1.6}}>
+        <strong style={{color:'var(--accent3)'}}>SEBI Disclaimer:</strong> Educational and planning purposes only. Not investment advice. All projections are illustrative. Consult a SEBI-registered advisor before making investment decisions.
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP ───────────────────────────────────────────────────────
+function App() {
+  const [screen, setScreen] = useState('landing'); // landing|onboarding|loading|archetype|dashboard
+  const [loadPhase, setLoadPhase] = useState(0);
+  const [archetypeData, setArchetypeData] = useState(null);
+  const [dashData, setDashData] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [error, setError] = useState('');
+
+  // Simulate loading phases
+  const animateLoading = async (fn) => {
+    for (let i=0;i<5;i++) {
+      setLoadPhase(i);
+      await new Promise(r=>setTimeout(r,900));
+    }
+    return fn();
+  };
+
+  const handleOnboardSubmit = async (data) => {
+    setUserData(data);
+    setScreen('loading');
+    setLoadPhase(0);
+    setError('');
+
+    try {
+      const loadProm = animateLoading(()=>{});
+      // Call the real 6-agent backend
+      const apiProm = callBackend(data.transactions, data.profile, data.goals);
+      const [, backendResp] = await Promise.all([loadProm, apiProm]);
+
+      const result = mapBackendToUI(backendResp);
+      setArchetypeData(result);
+      setDashData(result);
+      setScreen('archetype');
+    } catch(e) {
+      console.error('Backend call failed, using demo fallback:', e);
+      // Graceful fallback for demo / when backend isn't running
+      const fallback = getFallbackData(data);
+      setArchetypeData(fallback);
+      setDashData(fallback);
+      setScreen('archetype');
+    }
+  };
+
+  // ── Fallback data if API unavailable ──
+  const getFallbackData = (data) => ({
+    archetype: "Optimist Procrastinator",
+    confidence: 78,
+    archetypeDesc: `You plan brilliantly but execution stalls when life gets busy. Your savings intent is high but actual follow-through lags by 3–4 weeks consistently.`,
+    narrative: `Your transaction patterns show a classic gap between stated savings targets and actual execution — you save in bursts after feeling guilty, not consistently. Social and entertainment spend spikes on weekends suggest stress-triggered consumption. Your investment history likely shows 2–3 good months followed by a 6-week pause.`,
+    bsv: [
+      {label:"Impulse Velocity",display:"HIGH",value:72,color:"#ff6b35"},
+      {label:"Savings Consistency",display:"41%",value:41,color:"#ffb830"},
+      {label:"Social Spend Inflation",display:"MEDIUM",value:58,color:"#ffb830"},
+      {label:"Stated vs Actual Gap",display:"-22%",value:68,color:"#ff4560"},
+    ],
+    successRate: 43,
+    firstFailureMonth: "Month 5",
+    failurePct: 57,
+    failureModes:[
+      {icon:"📅",title:"Q3 SIP Pause",desc:"Work pressure in Aug–Sep causes a 6-week SIP break that breaks compounding momentum.",prob:74},
+      {icon:"🎪",title:"Festive Season Spike",desc:"Oct–Nov Diwali + family gifting inflates spend by ₹20–35K beyond budget.",prob:61},
+      {icon:"✈️",title:"Impulse Trip / Experience",desc:"Unplanned weekend getaway mid-year drains the buffer built over 3 months.",prob:48},
+    ],
+    simulationNarrative: `In 57% of 500 simulated futures, the plan breaks at Month 5 — specifically when a combination of festive spending and a skipped SIP compounds into a 3-month recovery period. The core failure isn't lack of discipline, it's lack of pre-committed friction: nothing stops the pauses from happening.`,
+    guardrails:[
+      {icon:"🔒",title:"SIP Anchor Lock",desc:"Set your SIP date to 2nd of every month (salary day +1). Add a ₹500 penalty jar if you pause."},
+      {icon:"🎊",title:"Festival Buffer SIP",desc:"Auto-route ₹2,000/month from Aug–Sep into a 'Festival Reserve' — spend only that, not savings."},
+      {icon:"⏱️",title:"11-Day Micro Milestone",desc:"Break your annual savings goal into 11-day checkpoints. Miss one → system flags before it compounds."},
+      {icon:"🧘",title:"Guilt Investment Jar",desc:"When you feel the urge to 'make up' for missed savings, redirect to a pre-set index fund, never lump-sum."},
+    ]
+  });
+
+  return (
+    <div className="app">
+      <NavBar screen={screen}/>
+      {screen==='landing' && <LandingScreen onStart={()=>setScreen('onboarding')}/>}
+      {screen==='onboarding' && <OnboardingScreen onSubmit={handleOnboardSubmit}/>}
+      {screen==='loading' && <LoadingScreen phase={loadPhase}/>}
+      {screen==='archetype' && archetypeData && (
+        <ArchetypeScreen data={archetypeData} onContinue={()=>setScreen('dashboard')}/>
+      )}
+      {screen==='dashboard' && dashData && (
+        <DashboardScreen data={dashData} userData={userData}/>
+      )}
+      {error && (
+        <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',
+          background:'var(--danger)',color:'#fff',padding:'10px 20px',borderRadius:8,fontSize:13}}>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
