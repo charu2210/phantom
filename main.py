@@ -41,6 +41,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+@app.get("/")
+async def root():
+    return {
+        "message": "Phantom Plan API is running",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Tighten in production
