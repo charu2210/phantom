@@ -1,235 +1,551 @@
-# 👻 Phantom Plan — Backend (6-Agent System)
+# 👻 Phantom
 
-> "We don't Monte Carlo market returns. We Monte Carlo **you**."
+> **We don't Monte Carlo market returns. We Monte Carlo you.**
+
+An AI-powered behavioral financial planning system that predicts **how your financial habits—not just the market—affect your future wealth.**
+
+Traditional financial planners assume you'll stick to the plan.
+
+**Phantom assumes you won't.**
+
+Instead of asking *"What if the market crashes?"*, Phantom asks:
+
+* What if you skip your SIP after three months?
+* What if lifestyle inflation catches up?
+* What if impulse purchases become more frequent?
+* What if your financial discipline slowly drifts over time?
+
+Using a multi-agent AI architecture, Phantom analyzes spending behavior, builds a personalized financial roadmap, simulates hundreds of possible behavioral futures, and continuously adapts as your habits evolve.
 
 ---
 
-## Architecture
+## Why Phantom?
+
+Financial planning today focuses almost entirely on **market uncertainty**.
+
+Human behavior causes far more financial plans to fail than market volatility.
+
+Phantom shifts the focus from predicting markets to predicting **people**.
+
+| Traditional Financial Planning | Phantom                              |
+| ------------------------------ | ------------------------------------ |
+| Assumes perfect discipline     | Models real human behavior           |
+| Static financial plan          | Adaptive behavioral planning         |
+| Market-based simulations       | Behavior-based simulations           |
+| One-time recommendations       | Continuous monthly monitoring        |
+| Generic advice                 | Personalized AI-generated guardrails |
+
+---
+
+# Demo
+
+> **Frontend:** *(Add deployment link here)*
+
+> **Backend API:** *(Add deployment link here)*
+
+> **Video Demo:** *(Add YouTube link here)*
+
+---
+
+# Features
+
+## Behavioral Fingerprinting
+
+Extracts a 14-dimensional Behavioral Signature Vector (BSV) from user transactions.
+
+Examples include:
+
+* Spending consistency
+* Present bias
+* Impulse tendency
+* Savings discipline
+* Goal persistence
+* Lifestyle inflation risk
+* Financial resilience
+
+---
+
+## Financial Archetype Detection
+
+Classifies every user into behavioral archetypes such as:
+
+* Optimist Procrastinator
+* Guilt Investor
+* Lifestyle Maximizer
+* Goal Chaser
+* Stability Seeker
+
+Each archetype includes:
+
+* Confidence score
+* Strengths
+* Weaknesses
+* Personalized narrative
+* Actionable insights
+
+---
+
+## AI Financial Plan
+
+Generates a personalized financial roadmap including:
+
+* Monthly allocation strategy
+* SIP recommendations
+* Emergency fund planning
+* FIRE projection
+* Tax optimization
+* Milestones
+
+---
+
+## Behavioral Monte Carlo Simulation
+
+Unlike traditional Monte Carlo simulations that randomize market returns, Phantom randomizes **human decisions**.
+
+Examples:
+
+* Skipping investments
+* Overspending
+* Salary growth
+* Unexpected expenses
+* Lifestyle inflation
+* Motivation decay
+
+500 behavioral futures are simulated to estimate the probability of long-term financial success.
+
+---
+
+## Personalized Guardrails
+
+Instead of simply saying *"Spend less,"* Phantom creates commitment systems such as:
+
+* Automatic savings rules
+* Spending caps
+* Emergency fund triggers
+* Investment automation
+* Monthly accountability checkpoints
+
+---
+
+## Monthly Drift Monitoring
+
+Financial behavior changes over time.
+
+Each month Phantom:
+
+* Re-analyzes transactions
+* Detects behavioral drift
+* Measures divergence from the original plan
+* Updates recommendations
+* Suggests new guardrails
+
+---
+
+# Example Workflow
+
+```
+User uploads transactions
+            │
+            ▼
+Behavioral Fingerprinting
+            │
+            ▼
+Financial Archetype Detection
+            │
+            ▼
+AI Financial Planning
+            │
+            ▼
+500 Behavioral Simulations
+            │
+            ▼
+Behavioral Guardrails
+            │
+            ▼
+Monthly Drift Monitoring
+```
+
+---
+
+# Example
+
+### Input
+
+```
+Income:
+₹75,000
+
+Goal:
+Retire by 45
+
+Behavior:
+"I save consistently for three months,
+then spend heavily on travel."
+```
+
+↓
+
+### Behavioral Fingerprint
+
+```
+Savings Discipline: 61
+
+Impulse Risk: 82
+
+Present Bias: 76
+
+Consistency: 54
+```
+
+↓
+
+### Archetype
+
+```
+Optimist Procrastinator
+Confidence: 82%
+```
+
+↓
+
+### Simulation
+
+```
+500 behavioral futures
+
+Success Probability:
+43%
+
+Most likely failure:
+Month 7
+```
+
+↓
+
+### Guardrail
+
+```
+Automatically transfer bonuses
+into emergency savings before
+they reach the spending account.
+```
+
+---
+
+# Architecture
 
 ```
                      ┌─────────────────────────────────┐
-                     │      FastAPI (main.py)           │
-                     │   POST /analyze   POST /drift    │
-                     └────────────┬────────────────────-┘
+                     │      FastAPI (main.py)          │
+                     │ POST /analyze   POST /drift     │
+                     └────────────┬────────────────────┘
                                   │
                      ┌────────────▼────────────────────┐
-                     │     Orchestrator (stateful)      │
-                     │  PipelineState flows through     │
-                     │  all agents, enriched each step  │
+                     │         Orchestrator            │
+                     │ Stateful multi-agent pipeline   │
                      └──┬──────┬──────┬──────┬─────────┘
                         │      │      │      │
-          ┌─────────────▼─┐ ┌──▼──┐ ┌▼────┐ ┌▼──────────┐ ┌──────────┐
-          │  Agent 1       │ │  2  │ │  3  │ │    4      │ │    5     │
-          │  Fingerprint   │ │Arch │ │Plan │ │ Simulate  │ │Guardrail │
-          │  (14-D BSV)    │ │type │ │     │ │ (500 sims)│ │Architect │
-          │  claude-opus   │ │haiku│ │sonnet│ │  opus     │ │  sonnet  │
-          └────────────────┘ └─────┘ └──────┘ └──────────┘ └──────────┘
-                                                        
-          ┌──────────────────────────────────────────────────────────────┐
-          │  Agent 6 — Monthly Drift Monitor (POST /drift endpoint)      │
-          │  Re-fingerprints new txns · Computes divergence · Re-sims    │
-          │  claude-haiku (cost-efficient monthly runs)                  │
-          └──────────────────────────────────────────────────────────────┘
+                        ▼      ▼      ▼      ▼
+
+                 Agent 1  Behavioral Fingerprint
+                 Agent 2  Archetype Detection
+                 Agent 3  Financial Plan
+                 Agent 4  Behavioral Simulation
+                 Agent 5  Guardrails
+                 Agent 6  Drift Monitoring
 ```
 
 ---
 
-## File Structure
+# Multi-Agent System
+
+## Agent 1 — Behavioral Fingerprint
+
+Produces a 14-dimensional Behavioral Signature Vector from spending history.
+
+**Model**
+
+Claude Opus 4.5
+
+---
+
+## Agent 2 — Archetype Classifier
+
+Assigns one of eight behavioral financial personalities.
+
+**Model**
+
+Claude Haiku 4.5
+
+---
+
+## Agent 3 — Financial Planner
+
+Builds personalized investment and savings strategies.
+
+Includes:
+
+* FIRE roadmap
+* SIP allocation
+* Tax optimization
+* Milestones
+
+**Model**
+
+Claude Sonnet 4.5
+
+---
+
+## Agent 4 — Behavioral Simulation
+
+Runs 500 behavioral futures to estimate plan success.
+
+**Model**
+
+Claude Opus 4.5
+
+---
+
+## Agent 5 — Guardrail Architect
+
+Designs commitment systems that reduce behavioral risk.
+
+**Model**
+
+Claude Sonnet 4.5
+
+---
+
+## Agent 6 — Drift Monitor
+
+Runs monthly behavioral reassessments.
+
+**Model**
+
+Claude Haiku 4.5
+
+---
+
+# Tech Stack
+
+### Backend
+
+* FastAPI
+* Python
+* Pydantic
+* Anthropic Claude API
+
+### Frontend
+
+* HTML
+* CSS
+* JavaScript
+
+### AI
+
+* Multi-Agent Orchestration
+* Behavioral Reasoning
+* Monte Carlo Simulation
+
+---
+
+# Repository Structure
 
 ```
 phantom-plan-backend/
-├── main.py                    ← FastAPI app, all endpoints
-├── orchestrator.py            ← Stateful agent pipeline + fallbacks
-├── models.py                  ← Pydantic models (inputs/outputs for all agents)
-├── requirements.txt           ← pip dependencies
-├── .env.example               ← Copy to .env and add API key
+│
+├── main.py
+├── orchestrator.py
+├── models.py
+├── requirements.txt
+├── .env.example
+│
 └── agents/
-    ├── __init__.py
-    ├── agent1_fingerprint.py  ← Behavioral Fingerprinting (14-D BSV)
-    ├── agent2_archetype.py    ← Archetype Classifier (8 types)
-    ├── agent3_plan.py         ← Financial Plan Constructor (FIRE/SIP/tax)
-    ├── agent4_simulation.py   ← Behavioral Monte Carlo (500 simulations)
-    ├── agent5_guardrails.py   ← Guardrail Architect (commitment devices)
-    └── agent6_drift.py        ← Monthly Drift Monitor (continuous loop)
+    ├── agent1_fingerprint.py
+    ├── agent2_archetype.py
+    ├── agent3_plan.py
+    ├── agent4_simulation.py
+    ├── agent5_guardrails.py
+    └── agent6_drift.py
 ```
 
 ---
 
-## Setup
+# Installation
 
-### 1. Clone & install
+## Clone
 
 ```bash
+git clone <repository-url>
+
 cd phantom-plan-backend
+```
+
+---
+
+## Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configure API key
+---
 
-```bash
+## Configure Environment
+
+```
 cp .env.example .env
-# Edit .env and add your ANTHROPIC_API_KEY
 ```
 
-### 3. Run the server
+Add:
+
+```
+ANTHROPIC_API_KEY=YOUR_KEY
+```
+
+---
+
+## Run
 
 ```bash
 python main.py
-# OR with auto-reload for development:
-uvicorn main:app --reload --port 8000
 ```
 
-Server starts at: `http://localhost:8000`
+or
 
-Interactive API docs: `http://localhost:8000/docs`
-
----
-
-## API Reference
-
-### `POST /analyze`
-
-Full 5-agent behavioral analysis. Returns the complete `PhantomPlanResponse`.
-
-**Expected time:** 20–40 seconds (5 LLM calls across 3 models)
-
-**Request body:**
-```json
-{
-  "profile": {
-    "name": "Aryan Sharma",
-    "age": 26,
-    "monthly_income": 75000,
-    "fire_target_age": 45,
-    "target_monthly_savings": 15000,
-    "top_goal": "Build 6-month emergency fund",
-    "self_reported_behavior": "I save well for 3 months then blow it on travel"
-  },
-  "transactions": [
-    { "description": "Zomato", "category": "Food", "amount": 3200 },
-    { "description": "SIP - Nifty Index", "category": "Investment", "amount": 5000 },
-    { "description": "Amazon shopping", "category": "Shopping", "amount": 8500 }
-  ],
-  "stated_savings_rate": 20.0
-}
-```
-
-**Response shape:**
-```json
-{
-  "bsv": { "raw": {...}, "overall_health": 54, "key_insight": "..." },
-  "archetype": {
-    "primary": "Optimist Procrastinator",
-    "confidence": 82,
-    "secondary": "Guilt Investor",
-    "narrative": "...",
-    "tagline": "You save in drafts, not deposits.",
-    "strength": "...",
-    "vulnerability": "..."
-  },
-  "plan": {
-    "monthly_allocation": { "index_fund_sip": 7500, "elss_sip": 3750, ... },
-    "fire_projection": { "projected_fire_age": 47, "on_track": false, ... },
-    "tax_optimization": { "current_regime_recommendation": "new", ... },
-    "milestones": [...]
-  },
-  "simulation": {
-    "summary": { "success_rate": 43, "median_first_failure_month": "Month 7", ... },
-    "failure_modes": [...],
-    "critical_month": {...},
-    "narrative": "..."
-  },
-  "guardrails": {
-    "guardrails": [...],
-    "combined_lift": "+28% plan success rate",
-    "first_action": "..."
-  }
-}
+```bash
+uvicorn main:app --reload
 ```
 
 ---
 
-### `POST /drift`
+# API
 
-Monthly re-analysis (Agent 6). Call with new transaction data each month.
+## POST /analyze
 
-```json
-{
-  "profile": { ... },
-  "new_transactions": [ ... ],
-  "original_bsv_raw": { ... },
-  "plan_allocation": { ... },
-  "month_number": 2
-}
-```
+Runs the complete five-agent behavioral analysis.
 
-**Response:** `DriftReport` with drift score, level (GREEN/AMBER/RED), wins, signals, updated guardrail.
+Returns:
+
+* Behavioral fingerprint
+* Archetype
+* Financial plan
+* Monte Carlo simulation
+* Personalized guardrails
 
 ---
 
-### `GET /health`
+## POST /drift
 
-```json
-{ "status": "ok", "api_key_set": true, "version": "1.0.0" }
-```
+Monthly behavioral re-analysis.
 
-### `GET /archetypes`
+Returns:
 
-Returns all 8 archetypes with taglines.
-
----
-
-## Model Routing
-
-Each agent uses the right model for cost/quality tradeoff:
-
-| Agent | Task | Model | Why |
-|-------|------|-------|-----|
-| Agent 1 | 14-D Behavioral Fingerprinting | claude-opus-4-5 | Deep pattern analysis needs best reasoning |
-| Agent 2 | Archetype Classification | claude-haiku-4-5 | Fast classification, cost-efficient |
-| Agent 3 | Financial Plan Construction | claude-sonnet-4-5 | Balanced — complex but structured |
-| Agent 4 | 500 Behavioral Simulations | claude-opus-4-5 | THE core differentiator — needs best model |
-| Agent 5 | Guardrail Architecture | claude-sonnet-4-5 | Creative + structured |
-| Agent 6 | Monthly Drift Monitor | claude-haiku-4-5 | Runs every month — must be cheap |
+* Drift score
+* Behavioral changes
+* Updated recommendations
+* New guardrails
 
 ---
 
-## Graceful Degradation
+## GET /health
 
-Every agent has a hardcoded fallback in `orchestrator.py`. If any agent fails (API timeout, JSON parse error, etc.), the pipeline continues with sensible defaults. **The API never returns a 500 unless ALL agents fail.**
-
-This means the hackathon demo never crashes — even if you have quota issues.
+Returns service status.
 
 ---
 
-## Connecting to the Frontend
+## GET /archetypes
 
-The frontend (`index.html`) is pre-configured to call `http://localhost:8000`.
-
-To change the backend URL, edit the top of the `<script>` block:
-```js
-const BACKEND_URL = "http://localhost:8000"; // ← change this
-```
-
-For production deployment (Railway, Render, Fly.io):
-```js
-const BACKEND_URL = "https://your-app.railway.app";
-```
+Returns all supported behavioral archetypes.
 
 ---
 
-## CORS
+# Model Routing
 
-CORS is open (`allow_origins=["*"]`) for hackathon speed. Lock it down in production to your frontend domain.
+| Agent                  | Model             | Reason                             |
+| ---------------------- | ----------------- | ---------------------------------- |
+| Behavioral Fingerprint | Claude Opus 4.5   | Deep reasoning                     |
+| Archetype              | Claude Haiku 4.5  | Fast classification                |
+| Planning               | Claude Sonnet 4.5 | Structured reasoning               |
+| Simulation             | Claude Opus 4.5   | Complex behavioral modeling        |
+| Guardrails             | Claude Sonnet 4.5 | Creative reasoning                 |
+| Drift                  | Claude Haiku 4.5  | Cost-efficient recurring inference |
 
 ---
 
-## Roadmap (Post-Hackathon)
+# Design Decisions
 
-- [ ] Setu Account Aggregator for real UPI/bank feed
-- [ ] CAMS/KFintech parser for MF statement overlay  
-- [ ] Fine-tune Llama 3.1 8B on Indian spending data for Agent 2 (cost reduction)
-- [ ] LangGraph proper integration with persistent memory store
-- [ ] WhatsApp / push notification triggers from Agent 6 drift alerts
-- [ ] Form 16 / salary slip parser for tax layer
-- [ ] PostgreSQL persistence for multi-month behavioral history
+### Why Multi-Agent?
+
+Separating responsibilities makes each component easier to evaluate, improve, and replace independently.
+
+### Why Behavioral Simulation?
+
+Most financial plans fail because of inconsistent human behavior rather than poor investment products.
+
+### Why Claude?
+
+Different models are selected based on reasoning complexity and cost efficiency.
+
+### Why Graceful Degradation?
+
+Every agent has a fallback, ensuring the pipeline continues even if an individual model fails.
+
+---
+
+# Current Limitations
+
+* Uses manually provided transaction data
+* No direct banking integrations
+* No persistent user history
+* Monthly monitoring is API-driven
+* Prototype optimized for hackathon deployment
+
+---
+
+# Roadmap
+
+## Integrations
+
+* Setu Account Aggregator
+* CAMS
+* KFintech
+
+## AI
+
+* Fine-tuned open-source behavioral models
+* Persistent agent memory
+* LangGraph orchestration
+
+## User Experience
+
+* WhatsApp reminders
+* Push notifications
+* Mobile application
+
+## Infrastructure
+
+* PostgreSQL
+* Authentication
+* User dashboard
+* Long-term behavioral analytics
+
+---
+
+# Contributing
+
+Contributions, feature requests, and discussions are welcome.
+
+Please open an issue before submitting large changes.
+
+---
+
+# License
+
+MIT License.
+
+---
+
+> **Phantom doesn't predict markets.**
+>
+> **It predicts the person making the decisions.**
